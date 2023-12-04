@@ -1,3 +1,4 @@
+import { unstable_noStore as noStore } from 'next/cache'
 import { sql } from '@vercel/postgres';
 import {
   CustomerField,
@@ -13,6 +14,7 @@ import { formatCurrency } from './utils';
 export async function fetchRevenue() {
   // Add noStore() here prevent the response from being cached.
   // This is equivalent to in fetch(..., {cache: 'no-store'}).
+  noStore();
 
   try {
     // Artificially delay a response for demo purposes.
@@ -33,6 +35,7 @@ export async function fetchRevenue() {
 }
 
 export async function fetchLatestInvoices() {
+  noStore();
   try {
     const data = await sql<LatestInvoiceRaw>`
       SELECT invoices.amount, customers.name, customers.image_url, customers.email, invoices.id
@@ -53,6 +56,7 @@ export async function fetchLatestInvoices() {
 }
 
 export async function fetchCardData() {
+  noStore();
   try {
     // You can probably combine these into a single SQL query
     // However, we are intentionally splitting them to demonstrate
@@ -76,10 +80,10 @@ export async function fetchCardData() {
     const totalPendingInvoices = formatCurrency(data[2].rows[0].pending ?? '0');
 
     return {
-      numberOfCustomers,
       numberOfInvoices,
-      totalPaidInvoices,
+      numberOfCustomers,
       totalPendingInvoices,
+      totalPaidInvoices,
     };
   } catch (error) {
     console.error('Database Error:', error);
@@ -92,6 +96,8 @@ export async function fetchFilteredInvoices(
   query: string,
   currentPage: number,
 ) {
+  noStore();
+
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
   try {
@@ -162,6 +168,7 @@ export async function fetchInvoiceById(id: string) {
       amount: invoice.amount / 100,
     }));
 
+    console.log(invoice); // Invoice is an empty array []
     return invoice[0];
   } catch (error) {
     console.error('Database Error:', error);
